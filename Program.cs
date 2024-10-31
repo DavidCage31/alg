@@ -6,114 +6,89 @@ namespace laba
 {
     class Program
     {
-        class Employees
+        public class GraphNode
         {
-            private int employeeId;
-            private string lastName;
-            private string firstName;
-            private DateTime birthDate;
-            private DateTime hireDate;
-            private string address;
+            public List<GraphNode> LinkedNodes;
+            public int Tag;
 
-            public Employees(int employeeId, string lastName, string firstName, DateTime birthDate, DateTime hireDate, string address)
+            public GraphNode()
             {
-                this.employeeId = employeeId;
-                this.lastName = lastName;  
-                this.firstName = firstName;
-                this.birthDate = birthDate;
-                this.hireDate = hireDate;
-                this.address = address;
-            }
-
-            public int EmployeeId { get => employeeId; set => employeeId = value; }
-            public string LastName { get => lastName; set => lastName = value; }
-            public string FirstName { get => firstName; set => firstName = value; }
-            public DateTime BirthDate { get => birthDate; set => birthDate = value; }
-            public DateTime HireDate { get => hireDate; set => hireDate = value; }
-            public string Address { get => address; set => address = value; }
-
-            public override string ToString()
-            {
-                return $"{employeeId} {lastName} {firstName} {birthDate} {hireDate} {address}";
-            }
-
-            public static bool operator ==( Employees a, Employees b )
-            {
-                return a.employeeId == b.employeeId && a.lastName == b.lastName && a.firstName == b.firstName &&
-                    a.birthDate == b.birthDate && a.hireDate == b.hireDate && a.address == b.address;
-            }
-
-            public static bool operator !=( Employees a, Employees b )
-            {
-                return !(a == b);
+                this.LinkedNodes = new List<GraphNode>();
+                this.Tag = 0;
             }
         }
 
-        class EmployeesList
+        public class Graph
         {
-            private Employees[] M;
+            public List<GraphNode> nodes;
 
-            public EmployeesList(Employees[] M)
+            public Graph()
             {
-                this.M = M;
+                this.nodes = new List<GraphNode>();
             }
 
-            public int Count { get { return M.Length; } }
-
-            public System.Collections.IEnumerator GetEnumerator()
+            public void TopologicSort()
             {
-                for (int i = 0; i < Count; i++)
-                    yield return M[i];
+                List<List<GraphNode>> levels = new List<List<GraphNode>>();
+                int?[] workArray = GetInputNodesArray();
+                int completedCounter = 0;
+                int currentLevel = 0;
+
+                while (completedCounter != this.nodes.Count)
+                {
+                    levels.Add(new List<GraphNode>());
+
+                    // Во избежание обработки вершин, с нулевой
+                    // степенью захода, возникших по ходу следующего цикла,
+                    // помечаем их заранее.
+
+                    for (int i = 0; i < this.nodes.Count; i++)
+                        if (workArray[i] == 0)
+                            workArray[i] = null;
+
+                    for (int i = 0; i < this.nodes.Count; i++)
+                    {
+                        if (workArray[i] == null)
+                        {
+                            // Если вершину следует обработать, помещаем её
+                            // В соответствующий ей уровень и корректируем
+                            // Массив степеней захода остальных вершин
+
+                            levels[currentLevel].Add(this.nodes[i]);
+
+                            this.nodes[i].Tag = currentLevel; // Оставляем в вершине метку о её уровне
+
+                            foreach (GraphNode node in this.nodes[i].LinkedNodes)
+                            {
+                                int linkedNode = this.nodes.IndexOf(node);
+
+                                workArray[linkedNode]--;
+                            }
+
+                            workArray[i] = -1; // Помечаем вершину как обработанную
+
+                            completedCounter++;
+                        }
+                    }
+
+                    currentLevel++;
+                }
             }
 
-            public bool Contains( Employees item )
+            int?[] GetInputNodesArray()
             {
-                for (int i = 0;i < Count; i++)
-                    if (item == M[i])
-                        return true;
-                return false;
-            }
+                int?[] array = new int?[this.nodes.Count];
 
-            public Employees this[int index] {  get => M[index]; set => M[index] = value; } }
-        
+                for (int i = 0; i < this.nodes.Count; i++)
+                    array[i] = this.nodes[i].LinkedNodes.Count;
+
+                return array;
+            }
+        }
 
         static void Main(string[] args) 
         {
-            StreamReader cin = new StreamReader("in.txt");
-
-            Employees[] temp = new Employees[int.Parse(cin.ReadLine())];
-
-            string line;
-            string[] info;
-
-
-
-            int i;
-
-            i = 0;
-
-            while ((line = cin.ReadLine()) != null)
-            {
-                info = line.Split(' ');
-
-                IEnumerable<int> dateInfo =
-                    from d in info[3].Split('/')
-                    select int.Parse(d);
-
-                IEnumerable<int> dateInfo2 =
-                    from d in info[4].Split('/')
-                    select int.Parse(d);
-
-                temp[i] = new Employees(int.Parse(info[0]), info[1], info[2],
-                    new DateTime(dateInfo[0], dateInfo[1], dateInfo[2]), 
-                    new DateTime(dateInfo2[0], dateInfo2[1], dateInfo2[2]), info[5]);
-
-                i++;
-            }
-
-            EmployeesList list = new EmployeesList(temp);
-
-            cin.Close();
+            
         }
     }
 }
