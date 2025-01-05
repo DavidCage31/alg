@@ -1,30 +1,24 @@
 import heapq
 
-class MinHeap:
-    def __init__(self):
-        self.heap = []
+# Создание пустой кучи
+min_heap = []
 
-    def insert(self, element):
-        heapq.heappush(self.heap, element)
+# Вставка элементов
+heapq.heappush(min_heap, 5)
+heapq.heappush(min_heap, 3)
+heapq.heappush(min_heap, 8)
 
-    def extract_min(self):
-        return heapq.heappop(self.heap)
+# Получение минимального элемента
+print("Минимальный элемент:", min_heap[0])  # 3
 
-    def get_min(self):
-        return self.heap[0] if self.heap else None
+# Извлечение минимального элемента
+print("Извлеченный элемент:", heapq.heappop(min_heap))  # 3
+print("Минимальный элемент после извлечения:", min_heap[0])  # 5
 
-    def is_empty(self):
-        return len(self.heap) == 0
+# Вставка еще одного элемента
+heapq.heappush(min_heap, 2)
+print("Минимальный элемент после вставки 2:", min_heap[0])  # 2
 
-# Пример использования
-min_heap = MinHeap()
-min_heap.insert(5)
-min_heap.insert(3)
-min_heap.insert(8)
-
-print(min_heap.get_min())       # 3
-print(min_heap.extract_min())   # 3
-print(min_heap.get_min())       # 5
 
 def dijkstra(graph, start):
     # Инициализация расстояний
