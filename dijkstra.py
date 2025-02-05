@@ -1,57 +1,59 @@
-import heapq
+from collections import defaultdict
 
-# Создание пустой кучи
-min_heap = []
+def dijkstra_with_buckets(graph, start):
+    n = len(graph)
 
-# Вставка элементов
-heapq.heappush(min_heap, 5)
-heapq.heappush(min_heap, 3)
-heapq.heappush(min_heap, 8)
-
-# Получение минимального элемента
-print("Минимальный элемент:", min_heap[0])  # 3
-
-# Извлечение минимального элемента
-print("Извлеченный элемент:", heapq.heappop(min_heap))  # 3
-print("Минимальный элемент после извлечения:", min_heap[0])  # 5
-
-# Вставка еще одного элемента
-heapq.heappush(min_heap, 2)
-print("Минимальный элемент после вставки 2:", min_heap[0])  # 2
-
-
-def dijkstra(graph, start):
-    # Инициализация расстояний
-    distances = {vertex: float('infinity') for vertex in graph}
+    distances = [float("inf")] * n
     distances[start] = 0
-    priority_queue = [(0, start)]  # (расстояние, вершина)
 
-    while priority_queue:
-        current_distance, current_vertex = heapq.heappop(priority_queue)
+    visited = [False] * n
 
-        # Если расстояние больше, чем уже найденное, пропускаем
-        if current_distance > distances[current_vertex]:
-            continue
+    buckets = defaultdict(set)
+    buckets[0].add(start)
+    current_bucket = 0
+    max_bucket = 0
 
-        # Обновление соседей
-        for neighbor, weight in graph[current_vertex].items():
-            distance = current_distance + weight
+    while current_bucket <= max_bucket:
+        # Пропускаем пустые черпаки
+        while current_bucket <= max_bucket and not buckets[current_bucket]:
+            current_bucket += 1
+        
+        if current_bucket > max_bucket:
+            break
 
-            # Если найдено более короткое расстояние
-            if distance < distances[neighbor]:
-                distances[neighbor] = distance
-                heapq.heappush(priority_queue, (distance, neighbor))
+        # Обрабатываем текущий черпак
+        while buckets[current_bucket]:
+            vertex = buckets[current_bucket].pop()
+            if visited[vertex]:
+                continue
+
+            visited[vertex] = True
+
+            for neighbor, weight in graph[vertex]:
+                if not visited[neighbor]:
+                    new_dist = distances[vertex] + weight
+                    if new_dist < distances[neighbor]:
+                        old_dist = distances[neighbor]
+                        distances[neighbor] = new_dist
+                        if old_dist != float("inf"):
+                            buckets[old_dist].discard(neighbor)
+                        buckets[new_dist].add(neighbor)
+                        if new_dist > max_bucket:
+                            max_bucket = new_dist
+        current_bucket += 1
 
     return distances
 
-# Пример графа
+# Пример графа в виде списка смежности
 graph = {
-    'A': {'B': 1, 'C': 4},
-    'B': {'A': 1, 'C': 2, 'D': 5},
-    'C': {'A': 4, 'B': 2, 'D': 1},
-    'D': {'B': 5, 'C': 1}
+    0: [(1, 1), (2, 3)],
+    1: [(2, 1)],
+    2: [(3, 2)],
+    3: []
 }
+start_vertex = 0
 
-# Запуск алгоритма
-shortest_paths = dijkstra(graph, 'A')
-print(shortest_paths)  # {'A': 0, 'B': 1, 'C': 3, 'D': 4}
+distances = dijkstra_with_buckets(graph, start_vertex)
+print("Кратчайшие расстояния от вершины", start_vertex)
+for i, d in enumerate(distances):
+    print(f"До вершины {i}: {d}")
